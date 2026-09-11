@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Klasszikus IAT Teszt</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      user-select: none;
+    }
+
+    #iat-container {
+      width: 800px;
+      height: 500px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .labels-container {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .left-label {
+      color: #2b5c8f;
+      text-align: left;
+    }
+
+    .right-label {
+      color: #2b5c8f;
+      text-align: right;
+    }
+
+    #stimulus-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 250px;
+      width: 100%;
+      position: relative;
+    }
+
+    #stimulus-img {
+      max-height: 200px;
+      max-width: 300px;
+      display: none;
+    }
+
+    #error-mark {
+      color: red;
+      font-size: 60px;
+      font-weight: bold;
+      position: absolute;
+      bottom: 20px;
+      display: none;
+    }
+
+    .instructions {
+      text-align: center;
+      font-size: 16px;
+      line-height: 1.5;
+      max-width: 650px;
+    }
+
+    .footer-hints {
+      font-size: 14px;
+      color: #666;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #2b5c8f;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+
+    button:hover {
+      background-color: #1d3d60;
+    }
+  </style>
+</head>
+<body>
+
+<div id="iat-container">
+  <div class="labels-container">
+    <div id="left-label" class="left-label"></div>
+    <div id="right-label" class="right-label"></div>
+  </div>
+
+  <div id="stimulus-container">
+    <img id="stimulus-img" src="" alt="stimulus">
+    <div id="instructions-text" class="instructions"></div>
+    <div id="error-mark">X</div>
+  </div>
+
+  <div id="footer-hints" class="footer-hints"></div>
+</div>
+
+<script>
+  // Képek előállítása a megadott struktúra szerint
+  function generateImages(prefix, count) {
+    const list = [];
+    for (let i = 1; i <= count; i++) {
+      let filename = (prefix === 'A') ? `A_${i}.jpg` : `${prefix}${i}.jpg`;
+      list.push(filename);
+    }
+    return list;
+  }
+
+  const items = {
+    A: generateImages('A', 10),
+    B: generateImages('B', 10),
+    C: generateImages('C', 10),
+    D: generateImages('D', 10)
+  };
+
+  // Kategórianevek (szükség esetén módosíthatók)
+  const names = {
+    A: "Kategória A",
+    B: "Kategória B",
+    C: "Kategória C",
+    D: "Kategória D"
+  };
+
+  // Blokkok struktúrája
+  const blocks = [
+    {
+      title: "1. Blokk: Target Gyakorlás",
+      instructions: `Helyezd a bal mutatóujjadat az <b>E</b>, a jobb mutatóujjadat az <b>I</b> billentyűre.<br><br>
+                     Balra (<b>E</b>): ${names.A}<br>
+                     Jobbra (<b>I</b>): ${names.B}<br><br>
+                     A folytatáshoz nyomd meg a <b>SPACE</b> billentyűt!`,
+      left: ['A'],
+      right: ['B'],
+      trials: 20
+    },
+    {
+      title: "2. Blokk: Attribute Gyakorlás",
+      instructions: `Most a tulajdonság-kategóriák következnek.<br><br>
+                     Balra (<b>E</b>): ${names.C}<br>
+                     Jobbra (<b>I</b>): ${names.D}<br><br>
+                     A folytatáshoz nyomd meg a <b>SPACE</b> billentyűt!`,
+      left: ['C'],
+      right: ['D'],
+      trials: 20
+    },
+    {
+      title: "3. Blokk: Kombinált Teszt (1. Rész)",
+      instructions: `A kategóriák összevonásra kerültek.<br><br>
+                     Balra (<b>E</b>): ${names.A} VAGY ${names.C}<br>
+                     Jobbra (<b>I</b>): ${names.B} VAGY ${names.D}<br><br>
+                     A folytatáshoz nyomd meg a <b>SPACE</b> billentyűt!`,
+      left: ['A', 'C'],
+      right: ['B', 'D'],
+      trials: 40
+    },
+    {
+      title: "4. Blokk: Cserélt Target Gyakorlás",
+      instructions: `Figyelem! A célkategóriák oldala felcserélődött.<br><br>
+                     Balra (<b>E</b>): ${names.B}<br>
+                     Jobbra (<b>I</b>): ${names.A}<br><br>
+                     A folytatáshoz nyomd meg a <b>SPACE</b> billentyűt!`,
+      left: ['B'],
+      right: ['A'],
+      trials: 20
+    },
+    {
+      title: "5. Blokk: Kombinált Teszt (2. Rész)",
+      instructions: `Az új felállás szerinti kombinált teszt.<br><br>
+                     Balra (<b>E</b>): ${names.B} VAGY ${names.C}<br>
+                     Jobbra (<b>I</b>): ${names.A} VAGY ${names.D}<br><br>
+                     A folytatáshoz nyomd meg a <b>SPACE</b> billentyűt!`,
+      left: ['B', 'C'],
+      right: ['A', 'D'],
+      trials: 40
+    }
+  ];
+
+  let currentBlockIndex = 0;
+  let currentTrialIndex = 0;
+  let trialSequence = [];
+  let startTime = 0;
+  let waitingForSpace = true;
+  let hasError = false;
+
+  // Eredmények tárolása a D-érték kiszámításához
+  let results = {
+    block3: [],
+    block5: []
+  };
+
+  const leftLabelEl = document.getElementById('left-label');
+  const rightLabelEl = document.getElementById('right-label');
+  const instructionsEl = document.getElementById('instructions-text');
+  const stimulusImgEl = document.getElementById('stimulus-img');
+  const errorMarkEl = document.getElementById('error-mark');
+  const footerHintsEl = document.getElementById('footer-hints');
+
+  function showBlockInstructions() {
+    waitingForSpace = true;
+    stimulusImgEl.style.display = 'none';
+    errorMarkEl.style.display = 'none';
+    
+    const b = blocks[currentBlockIndex];
+    leftLabelEl.innerHTML = b.left.map(k => names[k]).join("<br>vagy<br>");
+    rightLabelEl.innerHTML = b.right.map(k => names[k]).join("<br>vagy<br>");
+    
+    instructionsEl.innerHTML = `<h3>${b.title}</h3><p>${b.instructions}</p>`;
+    instructionsEl.style.display = 'block';
+    footerHintsEl.innerHTML = "Nyomj SPACE-t az indításhoz!";
+  }
+
+  function generateTrialSequence(block) {
+    let seq = [];
+    let pool = [];
+    
+    // Kategóriák képeinek gyűjtése
+    block.left.concat(block.right).forEach(cat => {
+      items[cat].forEach(img => {
+        pool.push({ img: img, category: cat });
+      });
+    });
+
+    // Véletlenszerű mintavételezés a kívánt próbaszámig
+    for (let i = 0; i < block.trials; i++) {
+      let randItem = pool[Math.floor(Math.random() * pool.length)];
+      seq.push(randItem);
+    }
+    return seq;
+  }
+
+  function startBlock() {
+    waitingForSpace = false;
+    instructionsEl.style.display = 'none';
+    stimulusImgEl.style.display = 'block';
+    footerHintsEl.innerHTML = "<b>E</b> = Bal oldal | <b>I</b> = Jobb oldal";
+    
+    trialSequence = generateTrialSequence(blocks[currentBlockIndex]);
+    currentTrialIndex = 0;
+    nextTrial();
+  }
+
+  function nextTrial() {
+    errorMarkEl.style.display = 'none';
+    hasError = false;
+
+    if (currentTrialIndex >= trialSequence.length) {
+      currentBlockIndex++;
+      if (currentBlockIndex < blocks.length) {
+        showBlockInstructions();
+      } else {
+        showResults();
+      }
+      return;
+    }
+
+    const currentTrial = trialSequence[currentTrialIndex];
+    stimulusImgEl.src = currentTrial.img;
+    startTime = performance.now();
+  }
+
+  function handleKeyPress(e) {
+    const key = e.key.toLowerCase();
+
+    if (waitingForSpace) {
+      if (e.code === 'Space') {
+        startBlock();
+      }
+      return;
+    }
+
+    if (key !== 'e' && key !== 'i') return;
+
+    const reactionTime = performance.now() - startTime;
+    const currentTrial = trialSequence[currentTrialIndex];
+    const currentBlock = blocks[currentBlockIndex];
+
+    let correctHand = '';
+    if (currentBlock.left.includes(currentTrial.category)) {
+      correctHand = 'e';
+    } else if (currentBlock.right.includes(currentTrial.category)) {
+      correctHand = 'i';
+    }
+
+    if (key === correctHand) {
+      // Csak a 3. és 5. blokk adatait mentjük az elemzéshez
+      if (currentBlockIndex === 2) {
+        results.block3.push(reactionTime);
+      } else if (currentBlockIndex === 4) {
+        results.block5.push(reactionTime);
+      }
+
+      currentTrialIndex++;
+      nextTrial();
+    } else {
+      // Helytelen válasz esetén piros X
+      hasError = true;
+      errorMarkEl.style.display = 'block';
+    }
+  }
+
+  function calculateDScore() {
+    if (results.block3.length === 0 || results.block5.length === 0) return 0;
+
+    // Kiszűrés: 10000ms feletti válaszok figyelmen kívül hagyása
+    const cleanB3 = results.block3.filter(t => t <= 10000);
+    const cleanB5 = results.block5.filter(t => t <= 10000);
+
+    const avgB3 = cleanB3.reduce((a, b) => a + b, 0) / cleanB3.length;
+    const avgB5 = cleanB5.reduce((a, b) => a + b, 0) / cleanB5.length;
+
+    const allTimes = cleanB3.concat(cleanB5);
+    const meanAll = allTimes.reduce((a, b) => a + b, 0) / allTimes.length;
+    
+    // Szórás (Standard Deviation)
+    const variance = allTimes.reduce((a, b) => a + Math.pow(b - meanAll, 2), 0) / allTimes.length;
+    const sd = Math.sqrt(variance);
+
+    // D-score = (Atlag_Block5 - Atlag_Block3) / Szoras
+    return ((avgB5 - avgB3) / sd).toFixed(2);
+  }
+
+  function showResults() {
+    stimulusImgEl.style.display = 'none';
+    errorMarkEl.style.display = 'none';
+    leftLabelEl.innerHTML = '';
+    rightLabelEl.innerHTML = '';
+    footerHintsEl.innerHTML = '';
+
+    const dScore = calculateDScore();
+    let interpretation = "";
+
+    if (dScore > 0.65) interpretation = "Erős implicit preferencia az 1. kombináció mellett.";
+    else if (dScore > 0.35) interpretation = "Közepes implicit preferencia az 1. kombináció mellett.";
+    else if (dScore > 0.15) interpretation = "Enyhe implicit preferencia az 1. kombináció mellett.";
+    else if (dScore > -0.15) interpretation = "Nincs kifejezett implicit preferencia a kategóriák között.";
+    else if (dScore > -0.35) interpretation = "Enyhe implicit preferencia a 2. kombináció mellett.";
+    else if (dScore > -0.65) interpretation = "Közepes implicit preferencia a 2. kombináció mellett.";
+    else interpretation = "Erős implicit preferencia a 2. kombináció mellett.";
+
+    instructionsEl.innerHTML = `
+      <h2>A teszt véget ért!</h2>
+      <p><b>Kiszámított D-érték:</b> ${dScore}</p>
+      <p>${interpretation}</p>
+      <button onclick="location.reload()">Teszt újrakezdése</button>
+    `;
+    instructionsEl.style.display = 'block';
+  }
+
+  document.addEventListener('keydown', handleKeyPress);
+
+  // Első blokk utasításainak megjelenítése indításkor
+  showBlockInstructions();
+</script>
+
+</body>
+</html>
