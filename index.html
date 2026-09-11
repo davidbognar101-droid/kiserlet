@@ -14,13 +14,13 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
       user-select: none;
     }
 
     #iat-container {
       width: 800px;
-      height: 520px;
+      min-height: 520px;
       background: white;
       border-radius: 8px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
@@ -79,7 +79,7 @@
       text-align: center;
       font-size: 16px;
       line-height: 1.5;
-      max-width: 650px;
+      max-width: 700px;
     }
 
     .footer-hints {
@@ -87,19 +87,56 @@
       color: #666;
     }
 
+    /* Táblázat stílus az eredményekhez */
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+      font-size: 14px;
+    }
+
+    .results-table th, .results-table td {
+      border: 1px solid #ddd;
+      padding: 8px 12px;
+      text-align: center;
+    }
+
+    .results-table th {
+      background-color: #2b5c8f;
+      color: white;
+    }
+
+    .results-table tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    .btn-container {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 15px;
+    }
+
     button {
-      padding: 10px 20px;
-      font-size: 16px;
+      padding: 10px 18px;
+      font-size: 15px;
       background-color: #2b5c8f;
       color: white;
       border: none;
       border-radius: 4px;
       cursor: pointer;
-      margin-top: 15px;
     }
 
     button:hover {
       background-color: #1d3d60;
+    }
+
+    button.download-btn {
+      background-color: #28a745;
+    }
+
+    button.download-btn:hover {
+      background-color: #1e7e34;
     }
   </style>
 </head>
@@ -121,7 +158,6 @@
 </div>
 
 <script>
-  // Képek generálása a fájlnevek alapján
   function generateImages(prefix, count) {
     const list = [];
     for (let i = 1; i <= count; i++) {
@@ -138,7 +174,6 @@
     D: generateImages('D', 10)
   };
 
-  // Kategórianév megnevezések (A és B = Kedvelt | C és D = Nem kedvelt)
   const names = {
     A: "Kedvelt A",
     B: "Kedvelt B",
@@ -146,9 +181,9 @@
     D: "Nem kedvelt D"
   };
 
-  // IAT Blokkok struktúrája
   const blocks = [
     {
+      name: "1. Blokk (Target)",
       title: "1. Blokk: Kedvelt kategóriák gyakorlása",
       instructions: `Helyezd a bal mutatóujjadat az <b>E</b>, a jobb mutatóujjadat az <b>I</b> billentyűre.<br><br>
                      Balra (<b>E</b>): ${names.A}<br>
@@ -159,6 +194,7 @@
       trials: 20
     },
     {
+      name: "2. Blokk (Attribute)",
       title: "2. Blokk: Nem kedvelt kategóriák gyakorlása",
       instructions: `Most a nem kedvelt képek következnek.<br><br>
                      Balra (<b>E</b>): ${names.C}<br>
@@ -169,6 +205,7 @@
       trials: 20
     },
     {
+      name: "3. Blokk (Kombinált 1)",
       title: "3. Blokk: Kombinált Teszt (1. Rész)",
       instructions: `A kategóriák összevonásra kerültek.<br><br>
                      Balra (<b>E</b>): ${names.A} VAGY ${names.C}<br>
@@ -179,6 +216,7 @@
       trials: 40
     },
     {
+      name: "4. Blokk (Felcserélt Target)",
       title: "4. Blokk: Felcserélt kedvelt kategóriák",
       instructions: `Figyelem! A kedvelt kategóriák oldala felcserélődött.<br><br>
                      Balra (<b>E</b>): ${names.B}<br>
@@ -189,6 +227,7 @@
       trials: 20
     },
     {
+      name: "5. Blokk (Kombinált 2)",
       title: "5. Blokk: Kombinált Teszt (2. Rész)",
       instructions: `Az új felállás szerinti kombinált teszt.<br><br>
                      Balra (<b>E</b>): ${names.B} VAGY ${names.C}<br>
@@ -205,12 +244,10 @@
   let trialSequence = [];
   let startTime = 0;
   let waitingForSpace = true;
+  let trialHadError = false;
 
-  // Eredmények gyűjtése a D-skálához
-  let results = {
-    block3: [],
-    block5: []
-  };
+  // Teljes adatgyűjtés az összes próbáról
+  let rawLog = [];
 
   const leftLabelEl = document.getElementById('left-label');
   const rightLabelEl = document.getElementById('right-label');
@@ -263,6 +300,7 @@
 
   function nextTrial() {
     errorMarkEl.style.display = 'none';
+    trialHadError = false;
 
     if (currentTrialIndex >= trialSequence.length) {
       currentBlockIndex++;
@@ -291,7 +329,7 @@
 
     if (key !== 'e' && key !== 'i') return;
 
-    const reactionTime = performance.now() - startTime;
+    const reactionTime = Math.round(performance.now() - startTime);
     const currentTrial = trialSequence[currentTrialIndex];
     const currentBlock = blocks[currentBlockIndex];
 
@@ -302,36 +340,82 @@
       correctHand = 'i';
     }
 
-    if (key === correctHand) {
-      if (currentBlockIndex === 2) {
-        results.block3.push(reactionTime);
-      } else if (currentBlockIndex === 4) {
-        results.block5.push(reactionTime);
-      }
+    const isCorrect = (key === correctHand);
 
+    // Mentsük el a nyers adatot
+    rawLog.push({
+      blockIndex: currentBlockIndex + 1,
+      blockName: currentBlock.name,
+      trialNum: currentTrialIndex + 1,
+      image: currentTrial.img,
+      category: currentTrial.category,
+      keyPressed: key,
+      correctKey: correctHand,
+      isCorrect: isCorrect,
+      hadErrorBefore: trialHadError,
+      reactionTime: reactionTime
+    });
+
+    if (isCorrect) {
       currentTrialIndex++;
       nextTrial();
     } else {
+      trialHadError = true;
       errorMarkEl.style.display = 'block';
     }
   }
 
-  function calculateDScore() {
-    if (results.block3.length === 0 || results.block5.length === 0) return 0;
+  function calculateStats() {
+    const blockStats = blocks.map((b, idx) => {
+      // Csak az adott blokk próbáit nézzük (az első gombnyomás reakcióidejét)
+      const blockTrials = rawLog.filter(l => l.blockIndex === idx + 1);
+      
+      // Első próbálkozások kiszűrése (a hibás válaszok előtti reakcióidő is számít)
+      const validTimes = blockTrials.map(t => t.reactionTime);
+      const errors = blockTrials.filter(t => !t.isCorrect).length;
+      
+      const sum = validTimes.reduce((a, b) => a + b, 0);
+      const avg = validTimes.length > 0 ? Math.round(sum / validTimes.length) : 0;
 
-    const cleanB3 = results.block3.filter(t => t <= 10000);
-    const cleanB5 = results.block5.filter(t => t <= 10000);
+      return {
+        name: b.name,
+        trials: blockTrials.length,
+        avgTime: avg,
+        errors: errors
+      };
+    });
 
-    const avgB3 = cleanB3.reduce((a, b) => a + b, 0) / cleanB3.length;
-    const avgB5 = cleanB5.reduce((a, b) => a + b, 0) / cleanB5.length;
+    // D-score számítás (3. és 5. blokk alapján)
+    const b3Log = rawLog.filter(l => l.blockIndex === 3 && l.reactionTime <= 10000);
+    const b5Log = rawLog.filter(l => l.blockIndex === 5 && l.reactionTime <= 10000);
 
-    const allTimes = cleanB3.concat(cleanB5);
-    const meanAll = allTimes.reduce((a, b) => a + b, 0) / allTimes.length;
-    
-    const variance = allTimes.reduce((a, b) => a + Math.pow(b - meanAll, 2), 0) / allTimes.length;
-    const sd = Math.sqrt(variance);
+    const avgB3 = b3Log.reduce((a, b) => a + b.reactionTime, 0) / (b3Log.length || 1);
+    const avgB5 = b5Log.reduce((a, b) => a + b.reactionTime, 0) / (b5Log.length || 1);
 
-    return ((avgB5 - avgB3) / sd).toFixed(2);
+    const combinedTimes = b3Log.concat(b5Log).map(l => l.reactionTime);
+    const meanAll = combinedTimes.reduce((a, b) => a + b, 0) / (combinedTimes.length || 1);
+    const variance = combinedTimes.reduce((a, b) => a + Math.pow(b - meanAll, 2), 0) / (combinedTimes.length || 1);
+    const sd = Math.sqrt(variance) || 1;
+
+    const dScore = ((avgB5 - avgB3) / sd).toFixed(2);
+
+    return { blockStats, dScore, avgB3: Math.round(avgB3), avgB5: Math.round(avgB5) };
+  }
+
+  function downloadCSV() {
+    let csv = "Blokk_Szam;Blokk_Nev;Proba_Szam;Kep;Kategoria;Lenyomott_Gomb;Helyes_Gomb;Helyes_Volt;Reakcioido_ms\n";
+    rawLog.forEach(row => {
+      csv += `${row.blockIndex};"${row.blockName}";${row.trialNum};"${row.image}";"${row.category}";"${row.keyPressed}";"${row.correctKey}";${row.isCorrect};${row.reactionTime}\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "iat_eredmenyek.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 
   function showResults() {
@@ -341,22 +425,37 @@
     rightLabelEl.innerHTML = '';
     footerHintsEl.innerHTML = '';
 
-    const dScore = calculateDScore();
-    let interpretation = "";
+    const stats = calculateStats();
 
-    if (dScore > 0.65) interpretation = "Erős társítási preferencia: (Kedvelt A + Nem kedvelt C) és (Kedvelt B + Nem kedvelt D).";
-    else if (dScore > 0.35) interpretation = "Közepes társítási preferencia a 3. blokk párosításai mellett.";
-    else if (dScore > 0.15) interpretation = "Enyhe társítási preferencia a 3. blokk párosításai mellett.";
-    else if (dScore > -0.15) interpretation = "Nincs kimutatható implicit különbség a társítások között.";
-    else if (dScore > -0.35) interpretation = "Enyhe társítási preferencia az 5. blokk párosításai (Kedvelt B + Nem kedvelt C) mellett.";
-    else if (dScore > -0.65) interpretation = "Közepes társítási preferencia az 5. blokk párosításai mellett.";
-    else interpretation = "Erős társítási preferencia az 5. blokk párosításai mellett.";
+    let tableRows = stats.blockStats.map(s => `
+      <tr>
+        <td style="text-align: left;">${s.name}</td>
+        <td>${s.avgTime} ms</td>
+        <td>${s.errors} db</td>
+      </tr>
+    `).join('');
 
     instructionsEl.innerHTML = `
       <h2>A teszt véget ért!</h2>
-      <p><b>Kiszámított D-érték:</b> ${dScore}</p>
-      <p>${interpretation}</p>
-      <button onclick="location.reload()">Teszt újrakezdése</button>
+      <p><b>Kiszámított D-érték:</b> ${stats.dScore}</p>
+      
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>Blokk</th>
+            <th>Átlagos reakcióidő</th>
+            <th>Melléütések (hibák)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${tableRows}
+        </tbody>
+      </table>
+
+      <div class="btn-container">
+        <button class="download-btn" onclick="downloadCSV()">Részletes adatok letöltése (CSV)</button>
+        <button onclick="location.reload()">Teszt újrakezdése</button>
+      </div>
     `;
     instructionsEl.style.display = 'block';
   }
