@@ -87,6 +87,16 @@
       color: #666;
     }
 
+    /* Kiemelt D-érték kártya stílusa */
+    .d-score-card {
+      background-color: #eef4fa;
+      border: 2px solid #2b5c8f;
+      border-radius: 6px;
+      padding: 12px 20px;
+      margin: 15px 0;
+      font-size: 18px;
+    }
+
     /* Táblázat stílus az eredményekhez */
     .results-table {
       width: 100%;
@@ -97,7 +107,7 @@
 
     .results-table th, .results-table td {
       border: 1px solid #ddd;
-      padding: 8px 12px;
+      padding: 10px 12px;
       text-align: center;
     }
 
@@ -108,6 +118,11 @@
 
     .results-table tr:nth-child(even) {
       background-color: #f9f9f9;
+    }
+
+    .highlight-row {
+      background-color: #eef4fa !important;
+      font-weight: bold;
     }
 
     .btn-container {
@@ -183,7 +198,7 @@
 
   const blocks = [
     {
-      name: "1. Blokk (Target)",
+      name: "1. Blokk: Target Gyakorlás",
       title: "1. Blokk: Kedvelt kategóriák gyakorlása",
       instructions: `Helyezd a bal mutatóujjadat az <b>E</b>, a jobb mutatóujjadat az <b>I</b> billentyűre.<br><br>
                      Balra (<b>E</b>): ${names.A}<br>
@@ -194,7 +209,7 @@
       trials: 20
     },
     {
-      name: "2. Blokk (Attribute)",
+      name: "2. Blokk: Attribute Gyakorlás",
       title: "2. Blokk: Nem kedvelt kategóriák gyakorlása",
       instructions: `Most a nem kedvelt képek következnek.<br><br>
                      Balra (<b>E</b>): ${names.C}<br>
@@ -205,7 +220,7 @@
       trials: 20
     },
     {
-      name: "3. Blokk (Kombinált 1)",
+      name: "3. Blokk: Kombinált Teszt (1. Rész)",
       title: "3. Blokk: Kombinált Teszt (1. Rész)",
       instructions: `A kategóriák összevonásra kerültek.<br><br>
                      Balra (<b>E</b>): ${names.A} VAGY ${names.C}<br>
@@ -216,7 +231,7 @@
       trials: 40
     },
     {
-      name: "4. Blokk (Felcserélt Target)",
+      name: "4. Blokk: Felcserélt Target",
       title: "4. Blokk: Felcserélt kedvelt kategóriák",
       instructions: `Figyelem! A kedvelt kategóriák oldala felcserélődött.<br><br>
                      Balra (<b>E</b>): ${names.B}<br>
@@ -227,7 +242,7 @@
       trials: 20
     },
     {
-      name: "5. Blokk (Kombinált 2)",
+      name: "5. Blokk: Kombinált Teszt (2. Rész)",
       title: "5. Blokk: Kombinált Teszt (2. Rész)",
       instructions: `Az új felállás szerinti kombinált teszt.<br><br>
                      Balra (<b>E</b>): ${names.B} VAGY ${names.C}<br>
@@ -246,7 +261,6 @@
   let waitingForSpace = true;
   let trialHadError = false;
 
-  // Teljes adatgyűjtés az összes próbáról
   let rawLog = [];
 
   const leftLabelEl = document.getElementById('left-label');
@@ -342,7 +356,6 @@
 
     const isCorrect = (key === correctHand);
 
-    // Mentsük el a nyers adatot
     rawLog.push({
       blockIndex: currentBlockIndex + 1,
       blockName: currentBlock.name,
@@ -367,10 +380,7 @@
 
   function calculateStats() {
     const blockStats = blocks.map((b, idx) => {
-      // Csak az adott blokk próbáit nézzük (az első gombnyomás reakcióidejét)
       const blockTrials = rawLog.filter(l => l.blockIndex === idx + 1);
-      
-      // Első próbálkozások kiszűrése (a hibás válaszok előtti reakcióidő is számít)
       const validTimes = blockTrials.map(t => t.reactionTime);
       const errors = blockTrials.filter(t => !t.isCorrect).length;
       
@@ -378,6 +388,7 @@
       const avg = validTimes.length > 0 ? Math.round(sum / validTimes.length) : 0;
 
       return {
+        index: idx + 1,
         name: b.name,
         trials: blockTrials.length,
         avgTime: avg,
@@ -385,7 +396,6 @@
       };
     });
 
-    // D-score számítás (3. és 5. blokk alapján)
     const b3Log = rawLog.filter(l => l.blockIndex === 3 && l.reactionTime <= 10000);
     const b5Log = rawLog.filter(l => l.blockIndex === 5 && l.reactionTime <= 10000);
 
@@ -427,24 +437,43 @@
 
     const stats = calculateStats();
 
-    let tableRows = stats.blockStats.map(s => `
-      <tr>
-        <td style="text-align: left;">${s.name}</td>
-        <td>${s.avgTime} ms</td>
-        <td>${s.errors} db</td>
-      </tr>
-    `).join('');
+    // D-érték értelmezése
+    let interpretation = "";
+    const dVal = parseFloat(stats.dScore);
+    if (dVal > 0.65) interpretation = "Erős implicit preferencia (Kedvelt A + Nem kedvelt C).";
+    else if (dVal > 0.35) interpretation = "Közepes implicit preferencia (Kedvelt A + Nem kedvelt C).";
+    else if (dVal > 0.15) interpretation = "Enyhe implicit preferencia (Kedvelt A + Nem kedvelt C).";
+    else if (dVal > -0.15) interpretation = "Nincs kimutatható különbség a társítások között.";
+    else if (dVal > -0.35) interpretation = "Enyhe implicit preferencia (Kedvelt B + Nem kedvelt C).";
+    else if (dVal > -0.65) interpretation = "Közepes implicit preferencia (Kedvelt B + Nem kedvelt C).";
+    else interpretation = "Erős implicit preferencia (Kedvelt B + Nem kedvelt C).";
+
+    let tableRows = stats.blockStats.map(s => {
+      const isCritical = (s.index === 3 || s.index === 5);
+      return `
+        <tr class="${isCritical ? 'highlight-row' : ''}">
+          <td style="text-align: left;">${s.name}</td>
+          <td><b>${s.avgTime} ms</b></td>
+          <td>${s.errors} db</td>
+        </tr>
+      `;
+    }).join('');
 
     instructionsEl.innerHTML = `
       <h2>A teszt véget ért!</h2>
-      <p><b>Kiszámított D-érték:</b> ${stats.dScore}</p>
       
+      <div class="d-score-card">
+        <b>Kiszámított D-érték:</b> <span style="font-size: 22px; color: #2b5c8f;">${stats.dScore}</span><br>
+        <small>${interpretation}</small>
+      </div>
+
+      <p style="margin-bottom: 5px;"><b>Blokkonkénti átlagos reakcióidők:</b></p>
       <table class="results-table">
         <thead>
           <tr>
-            <th>Blokk</th>
-            <th>Átlagos reakcióidő</th>
-            <th>Melléütések (hibák)</th>
+            <th>Blokk neve</th>
+            <th>Átlagos reakcióidő (ms)</th>
+            <th>Hibás próbálkozások</th>
           </tr>
         </thead>
         <tbody>
@@ -453,7 +482,7 @@
       </table>
 
       <div class="btn-container">
-        <button class="download-btn" onclick="downloadCSV()">Részletes adatok letöltése (CSV)</button>
+        <button class="download-btn" onclick="downloadCSV()">Nyers adatok letöltése (CSV)</button>
         <button onclick="location.reload()">Teszt újrakezdése</button>
       </div>
     `;
