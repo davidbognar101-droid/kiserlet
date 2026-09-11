@@ -188,7 +188,6 @@
     D: generateImages('D', 10)
   };
 
-  // Kategórianevek frissítve az új, egyszerűsített formára
   const names = {
     A: "A kategória",
     B: "B kategória",
@@ -332,8 +331,6 @@
   }
 
   function handleKeyPress(e) {
-    const key = e.key.toLowerCase();
-
     if (waitingForSpace) {
       if (e.code === 'Space') {
         startBlock();
@@ -341,6 +338,7 @@
       return;
     }
 
+    const key = e.key.toLowerCase();
     if (key !== 'e' && key !== 'i') return;
 
     const reactionTime = Math.round(performance.now() - startTime);
@@ -356,6 +354,7 @@
 
     const isCorrect = (key === correctHand);
 
+    // Mentsük el a próbálkozást
     rawLog.push({
       blockIndex: currentBlockIndex + 1,
       blockName: currentBlock.name,
@@ -381,23 +380,25 @@
   function calculateStats() {
     const blockStats = blocks.map((b, idx) => {
       const blockTrials = rawLog.filter(l => l.blockIndex === idx + 1);
-      const validTimes = blockTrials.map(t => t.reactionTime);
-      const errors = blockTrials.filter(t => !t.isCorrect).length;
+      // Helyes próbálkozások reakcióidői (az első próbálkozásra adott helyes válaszok)
+      const validFirstTryTimes = blockTrials.filter(t => t.isCorrect && !t.hadErrorBefore).map(t => t.reactionTime);
+      const errors = blockTrials.filter(t => !t.isCorrect && !t.hadErrorBefore).length;
       
-      const sum = validTimes.reduce((a, b) => a + b, 0);
-      const avg = validTimes.length > 0 ? Math.round(sum / validTimes.length) : 0;
+      const sum = validFirstTryTimes.reduce((a, b) => a + b, 0);
+      const avg = validFirstTryTimes.length > 0 ? Math.round(sum / validFirstTryTimes.length) : 0;
 
       return {
         index: idx + 1,
         name: b.name,
-        trials: blockTrials.length,
+        trials: b.trials,
         avgTime: avg,
         errors: errors
       };
     });
 
-    const b3Log = rawLog.filter(l => l.blockIndex === 3 && l.reactionTime <= 10000);
-    const b5Log = rawLog.filter(l => l.blockIndex === 5 && l.reactionTime <= 10000);
+    // D-Score számítás a 3. és 5. blokkok első helyes válaszaiból (300ms és 10000ms szűréssel)
+    const b3Log = rawLog.filter(l => l.blockIndex === 3 && l.isCorrect && !l.hadErrorBefore && l.reactionTime >= 300 && l.reactionTime <= 10000);
+    const b5Log = rawLog.filter(l => l.blockIndex === 5 && l.isCorrect && !l.hadErrorBefore && l.reactionTime >= 300 && l.reactionTime <= 10000);
 
     const avgB3 = b3Log.reduce((a, b) => a + b.reactionTime, 0) / (b3Log.length || 1);
     const avgB5 = b5Log.reduce((a, b) => a + b.reactionTime, 0) / (b5Log.length || 1);
@@ -413,9 +414,9 @@
   }
 
   function downloadCSV() {
-    let csv = "Blokk_Szam;Blokk_Nev;Proba_Szam;Kep;Kategoria;Lenyomott_Gomb;Helyes_Gomb;Helyes_Volt;Reakcioido_ms\n";
+    let csv = "Blokk_Szam;Blokk_Nev;Proba_Szam;Kep;Kategoria;Lenyomott_Gomb;Helyes_Gomb;Helyes_Volt;Volt_Elobb_Hiba;Reakcioido_ms\n";
     rawLog.forEach(row => {
-      csv += `${row.blockIndex};"${row.blockName}";${row.trialNum};"${row.image}";"${row.category}";"${row.keyPressed}";"${row.correctKey}";${row.isCorrect};${row.reactionTime}\n`;
+      csv += `${row.blockIndex};"${row.blockName}";${row.trialNum};"${row.image}";"${row.category}";"${row.keyPressed}";"${row.correctKey}";${row.isCorrect};${row.hadErrorBefore};${row.reactionTime}\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -466,13 +467,13 @@
         <small>${interpretation}</small>
       </div>
 
-      <p style="margin-bottom: 5px;"><b>Blokkonkénti átlagos reakcióidők:</b></p>
+      <p style="margin-bottom: 5px;"><b>Blokkonkénti átlagos reakcióidők (első helyes próbálkozások):</b></p>
       <table class="results-table">
         <thead>
           <tr>
             <th>Blokk neve</th>
             <th>Átlagos reakcióidő (ms)</th>
-            <th>Hibás próbálkozások</th>
+            <th>Elsőre elrontott próbálkozások</th>
           </tr>
         </thead>
         <tbody>
