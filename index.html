@@ -20,7 +20,7 @@
 
     #iat-container {
       width: 800px;
-      height: 500px;
+      height: 520px;
       background: white;
       border-radius: 8px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
@@ -37,7 +37,7 @@
       display: flex;
       justify-content: space-between;
       width: 100%;
-      font-size: 22px;
+      font-size: 20px;
       font-weight: bold;
     }
 
@@ -61,8 +61,8 @@
     }
 
     #stimulus-img {
-      max-height: 200px;
-      max-width: 300px;
+      max-height: 220px;
+      max-width: 320px;
       display: none;
     }
 
@@ -71,7 +71,7 @@
       font-size: 60px;
       font-weight: bold;
       position: absolute;
-      bottom: 20px;
+      bottom: 10px;
       display: none;
     }
 
@@ -121,7 +121,7 @@
 </div>
 
 <script>
-  // Képek előállítása a megadott struktúra szerint
+  // Képek generálása a fájlnevek alapján
   function generateImages(prefix, count) {
     const list = [];
     for (let i = 1; i <= count; i++) {
@@ -138,18 +138,18 @@
     D: generateImages('D', 10)
   };
 
-  // Kategórianevek (szükség esetén módosíthatók)
+  // Kategórianév megnevezések (A és B = Kedvelt | C és D = Nem kedvelt)
   const names = {
-    A: "Kategória A",
-    B: "Kategória B",
-    C: "Kategória C",
-    D: "Kategória D"
+    A: "Kedvelt A",
+    B: "Kedvelt B",
+    C: "Nem kedvelt C",
+    D: "Nem kedvelt D"
   };
 
-  // Blokkok struktúrája
+  // IAT Blokkok struktúrája
   const blocks = [
     {
-      title: "1. Blokk: Target Gyakorlás",
+      title: "1. Blokk: Kedvelt kategóriák gyakorlása",
       instructions: `Helyezd a bal mutatóujjadat az <b>E</b>, a jobb mutatóujjadat az <b>I</b> billentyűre.<br><br>
                      Balra (<b>E</b>): ${names.A}<br>
                      Jobbra (<b>I</b>): ${names.B}<br><br>
@@ -159,8 +159,8 @@
       trials: 20
     },
     {
-      title: "2. Blokk: Attribute Gyakorlás",
-      instructions: `Most a tulajdonság-kategóriák következnek.<br><br>
+      title: "2. Blokk: Nem kedvelt kategóriák gyakorlása",
+      instructions: `Most a nem kedvelt képek következnek.<br><br>
                      Balra (<b>E</b>): ${names.C}<br>
                      Jobbra (<b>I</b>): ${names.D}<br><br>
                      A folytatáshoz nyomd meg a <b>SPACE</b> billentyűt!`,
@@ -179,8 +179,8 @@
       trials: 40
     },
     {
-      title: "4. Blokk: Cserélt Target Gyakorlás",
-      instructions: `Figyelem! A célkategóriák oldala felcserélődött.<br><br>
+      title: "4. Blokk: Felcserélt kedvelt kategóriák",
+      instructions: `Figyelem! A kedvelt kategóriák oldala felcserélődött.<br><br>
                      Balra (<b>E</b>): ${names.B}<br>
                      Jobbra (<b>I</b>): ${names.A}<br><br>
                      A folytatáshoz nyomd meg a <b>SPACE</b> billentyűt!`,
@@ -205,9 +205,8 @@
   let trialSequence = [];
   let startTime = 0;
   let waitingForSpace = true;
-  let hasError = false;
 
-  // Eredmények tárolása a D-érték kiszámításához
+  // Eredmények gyűjtése a D-skálához
   let results = {
     block3: [],
     block5: []
@@ -238,14 +237,12 @@
     let seq = [];
     let pool = [];
     
-    // Kategóriák képeinek gyűjtése
     block.left.concat(block.right).forEach(cat => {
       items[cat].forEach(img => {
         pool.push({ img: img, category: cat });
       });
     });
 
-    // Véletlenszerű mintavételezés a kívánt próbaszámig
     for (let i = 0; i < block.trials; i++) {
       let randItem = pool[Math.floor(Math.random() * pool.length)];
       seq.push(randItem);
@@ -266,7 +263,6 @@
 
   function nextTrial() {
     errorMarkEl.style.display = 'none';
-    hasError = false;
 
     if (currentTrialIndex >= trialSequence.length) {
       currentBlockIndex++;
@@ -307,7 +303,6 @@
     }
 
     if (key === correctHand) {
-      // Csak a 3. és 5. blokk adatait mentjük az elemzéshez
       if (currentBlockIndex === 2) {
         results.block3.push(reactionTime);
       } else if (currentBlockIndex === 4) {
@@ -317,8 +312,6 @@
       currentTrialIndex++;
       nextTrial();
     } else {
-      // Helytelen válasz esetén piros X
-      hasError = true;
       errorMarkEl.style.display = 'block';
     }
   }
@@ -326,7 +319,6 @@
   function calculateDScore() {
     if (results.block3.length === 0 || results.block5.length === 0) return 0;
 
-    // Kiszűrés: 10000ms feletti válaszok figyelmen kívül hagyása
     const cleanB3 = results.block3.filter(t => t <= 10000);
     const cleanB5 = results.block5.filter(t => t <= 10000);
 
@@ -336,11 +328,9 @@
     const allTimes = cleanB3.concat(cleanB5);
     const meanAll = allTimes.reduce((a, b) => a + b, 0) / allTimes.length;
     
-    // Szórás (Standard Deviation)
     const variance = allTimes.reduce((a, b) => a + Math.pow(b - meanAll, 2), 0) / allTimes.length;
     const sd = Math.sqrt(variance);
 
-    // D-score = (Atlag_Block5 - Atlag_Block3) / Szoras
     return ((avgB5 - avgB3) / sd).toFixed(2);
   }
 
@@ -354,13 +344,13 @@
     const dScore = calculateDScore();
     let interpretation = "";
 
-    if (dScore > 0.65) interpretation = "Erős implicit preferencia az 1. kombináció mellett.";
-    else if (dScore > 0.35) interpretation = "Közepes implicit preferencia az 1. kombináció mellett.";
-    else if (dScore > 0.15) interpretation = "Enyhe implicit preferencia az 1. kombináció mellett.";
-    else if (dScore > -0.15) interpretation = "Nincs kifejezett implicit preferencia a kategóriák között.";
-    else if (dScore > -0.35) interpretation = "Enyhe implicit preferencia a 2. kombináció mellett.";
-    else if (dScore > -0.65) interpretation = "Közepes implicit preferencia a 2. kombináció mellett.";
-    else interpretation = "Erős implicit preferencia a 2. kombináció mellett.";
+    if (dScore > 0.65) interpretation = "Erős társítási preferencia: (Kedvelt A + Nem kedvelt C) és (Kedvelt B + Nem kedvelt D).";
+    else if (dScore > 0.35) interpretation = "Közepes társítási preferencia a 3. blokk párosításai mellett.";
+    else if (dScore > 0.15) interpretation = "Enyhe társítási preferencia a 3. blokk párosításai mellett.";
+    else if (dScore > -0.15) interpretation = "Nincs kimutatható implicit különbség a társítások között.";
+    else if (dScore > -0.35) interpretation = "Enyhe társítási preferencia az 5. blokk párosításai (Kedvelt B + Nem kedvelt C) mellett.";
+    else if (dScore > -0.65) interpretation = "Közepes társítási preferencia az 5. blokk párosításai mellett.";
+    else interpretation = "Erős társítási preferencia az 5. blokk párosításai mellett.";
 
     instructionsEl.innerHTML = `
       <h2>A teszt véget ért!</h2>
@@ -372,8 +362,6 @@
   }
 
   document.addEventListener('keydown', handleKeyPress);
-
-  // Első blokk utasításainak megjelenítése indításkor
   showBlockInstructions();
 </script>
 
