@@ -39,6 +39,7 @@
       width: 100%;
       font-size: 20px;
       font-weight: bold;
+      min-height: 50px;
     }
 
     .left-label {
@@ -87,7 +88,6 @@
       color: #666;
     }
 
-    /* Kiemelt D-érték kártya stílusa */
     .d-score-card {
       background-color: #eef4fa;
       border: 2px solid #2b5c8f;
@@ -97,7 +97,6 @@
       font-size: 18px;
     }
 
-    /* Táblázat stílus az eredményekhez */
     .results-table {
       width: 100%;
       border-collapse: collapse;
@@ -189,17 +188,18 @@
     D: generateImages('D', 10)
   };
 
+  // Kategórianevek frissítve az új, egyszerűsített formára
   const names = {
-    A: "Kedvelt A",
-    B: "Kedvelt B",
-    C: "Nem kedvelt C",
-    D: "Nem kedvelt D"
+    A: "A kategória",
+    B: "B kategória",
+    C: "C kategória",
+    D: "D kategória"
   };
 
   const blocks = [
     {
       name: "1. Blokk: Target Gyakorlás",
-      title: "1. Blokk: Kedvelt kategóriák gyakorlása",
+      title: "1. Blokk: Target kategóriák gyakorlása",
       instructions: `Helyezd a bal mutatóujjadat az <b>E</b>, a jobb mutatóujjadat az <b>I</b> billentyűre.<br><br>
                      Balra (<b>E</b>): ${names.A}<br>
                      Jobbra (<b>I</b>): ${names.B}<br><br>
@@ -210,8 +210,8 @@
     },
     {
       name: "2. Blokk: Attribute Gyakorlás",
-      title: "2. Blokk: Nem kedvelt kategóriák gyakorlása",
-      instructions: `Most a nem kedvelt képek következnek.<br><br>
+      title: "2. Blokk: Attribute kategóriák gyakorlása",
+      instructions: `Most a tulajdonság-képek következnek.<br><br>
                      Balra (<b>E</b>): ${names.C}<br>
                      Jobbra (<b>I</b>): ${names.D}<br><br>
                      A folytatáshoz nyomd meg a <b>SPACE</b> billentyűt!`,
@@ -232,8 +232,8 @@
     },
     {
       name: "4. Blokk: Felcserélt Target",
-      title: "4. Blokk: Felcserélt kedvelt kategóriák",
-      instructions: `Figyelem! A kedvelt kategóriák oldala felcserélődött.<br><br>
+      title: "4. Blokk: Felcserélt target kategóriák",
+      instructions: `Figyelem! A target kategóriák oldala felcserélődött.<br><br>
                      Balra (<b>E</b>): ${names.B}<br>
                      Jobbra (<b>I</b>): ${names.A}<br><br>
                      A folytatáshoz nyomd meg a <b>SPACE</b> billentyűt!`,
@@ -437,16 +437,15 @@
 
     const stats = calculateStats();
 
-    // D-érték értelmezése
     let interpretation = "";
     const dVal = parseFloat(stats.dScore);
-    if (dVal > 0.65) interpretation = "Erős implicit preferencia (Kedvelt A + Nem kedvelt C).";
-    else if (dVal > 0.35) interpretation = "Közepes implicit preferencia (Kedvelt A + Nem kedvelt C).";
-    else if (dVal > 0.15) interpretation = "Enyhe implicit preferencia (Kedvelt A + Nem kedvelt C).";
+    if (dVal > 0.65) interpretation = "Erős implicit társítási preferencia (A kategória + C kategória).";
+    else if (dVal > 0.35) interpretation = "Közepes implicit társítási preferencia (A kategória + C kategória).";
+    else if (dVal > 0.15) interpretation = "Enyhe implicit társítási preferencia (A kategória + C kategória).";
     else if (dVal > -0.15) interpretation = "Nincs kimutatható különbség a társítások között.";
-    else if (dVal > -0.35) interpretation = "Enyhe implicit preferencia (Kedvelt B + Nem kedvelt C).";
-    else if (dVal > -0.65) interpretation = "Közepes implicit preferencia (Kedvelt B + Nem kedvelt C).";
-    else interpretation = "Erős implicit preferencia (Kedvelt B + Nem kedvelt C).";
+    else if (dVal > -0.35) interpretation = "Enyhe implicit társítási preferencia (B kategória + C kategória).";
+    else if (dVal > -0.65) interpretation = "Közepes implicit társítási preferencia (B kategória + C kategória).";
+    else interpretation = "Erős implicit társítási preferencia (B kategória + C kategória).";
 
     let tableRows = stats.blockStats.map(s => {
       const isCritical = (s.index === 3 || s.index === 5);
