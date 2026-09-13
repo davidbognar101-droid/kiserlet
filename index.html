@@ -1,181 +1,17 @@
-<!DOCTYPE html>
-<html lang="hu">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Klasszikus IAT Teszt</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f9;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      user-select: none;
-    }
-
-    #iat-container {
-      width: 800px;
-      min-height: 520px;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px;
-      box-sizing: border-box;
-    }
-
-    .labels-container {
-      display: flex;
-      justify-content: space-between;
-      width: 100%;
-      font-size: 20px;
-      font-weight: bold;
-      min-height: 50px;
-    }
-
-    .left-label {
-      color: #2b5c8f;
-      text-align: left;
-    }
-
-    .right-label {
-      color: #2b5c8f;
-      text-align: right;
-    }
-
-    #stimulus-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 250px;
-      width: 100%;
-      position: relative;
-    }
-
-    #stimulus-img {
-      max-height: 220px;
-      max-width: 320px;
-      display: none;
-    }
-
-    #error-mark {
-      color: red;
-      font-size: 60px;
-      font-weight: bold;
-      position: absolute;
-      bottom: 10px;
-      display: none;
-    }
-
-    .instructions {
-      text-align: center;
-      font-size: 16px;
-      line-height: 1.5;
-      max-width: 700px;
-    }
-
-    .footer-hints {
-      font-size: 14px;
-      color: #666;
-    }
-
-    .d-score-card {
-      background-color: #eef4fa;
-      border: 2px solid #2b5c8f;
-      border-radius: 6px;
-      padding: 12px 20px;
-      margin: 15px 0;
-      font-size: 18px;
-    }
-
-    .results-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 15px 0;
-      font-size: 14px;
-    }
-
-    .results-table th, .results-table td {
-      border: 1px solid #ddd;
-      padding: 10px 12px;
-      text-align: center;
-    }
-
-    .results-table th {
-      background-color: #2b5c8f;
-      color: white;
-    }
-
-    .results-table tr:nth-child(even) {
-      background-color: #f9f9f9;
-    }
-
-    .highlight-row {
-      background-color: #eef4fa !important;
-      font-weight: bold;
-    }
-
-    .btn-container {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      margin-top: 15px;
-    }
-
-    button {
-      padding: 10px 18px;
-      font-size: 15px;
-      background-color: #2b5c8f;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #1d3d60;
-    }
-
-    button.download-btn {
-      background-color: #28a745;
-    }
-
-    button.download-btn:hover {
-      background-color: #1e7e34;
-    }
-  </style>
-</head>
-<body>
-
-<div id="iat-container">
-  <div class="labels-container">
-    <div id="left-label" class="left-label"></div>
-    <div id="right-label" class="right-label"></div>
-  </div>
-
-  <div id="stimulus-container">
-    <img id="stimulus-img" src="" alt="stimulus">
-    <div id="instructions-text" class="instructions"></div>
-    <div id="error-mark">X</div>
-  </div>
-
-  <div id="footer-hints" class="footer-hints"></div>
-</div>
-
 <script>
+  // HA A KÉPEK EGY MAPPA-BAN VANNAK (pl. "images" mappa): módosítsd ezt 'images/'-re!
+  // Ha a képek az index.html mellett vannak közvetlenül, hagyd az értéket './'-on.
+  const IMAGE_FOLDER = './'; 
+
+  // HA A KÉPEID KITERJESZTÉSE PNG (és nem JPG), írd át '.png'-re!
+  const IMAGE_EXTENSION = '.jpg';
+
   function generateImages(prefix, count) {
     const list = [];
     for (let i = 1; i <= count; i++) {
-      let filename = (prefix === 'A') ? `A_${i}.jpg` : `${prefix}${i}.jpg`;
+      let filename = (prefix === 'A') 
+        ? `${IMAGE_FOLDER}A_${i}${IMAGE_EXTENSION}` 
+        : `${IMAGE_FOLDER}${prefix}${i}${IMAGE_EXTENSION}`;
       list.push(filename);
     }
     return list;
@@ -354,7 +190,6 @@
 
     const isCorrect = (key === correctHand);
 
-    // Mentsük el a próbálkozást
     rawLog.push({
       blockIndex: currentBlockIndex + 1,
       blockName: currentBlock.name,
@@ -380,7 +215,6 @@
   function calculateStats() {
     const blockStats = blocks.map((b, idx) => {
       const blockTrials = rawLog.filter(l => l.blockIndex === idx + 1);
-      // Helyes próbálkozások reakcióidői (az első próbálkozásra adott helyes válaszok)
       const validFirstTryTimes = blockTrials.filter(t => t.isCorrect && !t.hadErrorBefore).map(t => t.reactionTime);
       const errors = blockTrials.filter(t => !t.isCorrect && !t.hadErrorBefore).length;
       
@@ -396,7 +230,6 @@
       };
     });
 
-    // D-Score számítás a 3. és 5. blokkok első helyes válaszaiból (300ms és 10000ms szűréssel)
     const b3Log = rawLog.filter(l => l.blockIndex === 3 && l.isCorrect && !l.hadErrorBefore && l.reactionTime >= 300 && l.reactionTime <= 10000);
     const b5Log = rawLog.filter(l => l.blockIndex === 5 && l.isCorrect && !l.hadErrorBefore && l.reactionTime >= 300 && l.reactionTime <= 10000);
 
@@ -492,6 +325,3 @@
   document.addEventListener('keydown', handleKeyPress);
   showBlockInstructions();
 </script>
-
-</body>
-</html>
