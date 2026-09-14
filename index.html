@@ -174,24 +174,21 @@
 <script>
   const IMAGE_FOLDER = './'; 
 
-  // Dinamikus képnév generáló, ami elfogad egyedi kiterjesztést is
+  // Egységesített képnév-generáló: mindig kiteszi az alulvonást (pl. A_1.jpg, C_1.jpg)
   function generateImages(prefix, count, extension) {
     const list = [];
     for (let i = 1; i <= count; i++) {
-      let filename = (prefix === 'A') 
-        ? `${IMAGE_FOLDER}A_${i}${extension}` 
-        : `${IMAGE_FOLDER}${prefix}${i}${extension}`;
-      list.push(filename);
+      list.push(`${IMAGE_FOLDER}${prefix}_${i}${extension}`);
     }
     return list;
   }
 
-  // Megadjuk, hogy melyik kategóriához milyen kiterjesztés tartozik
+  // Kategóriánként megadott kiterjesztések (A és C: .jpg, B és D: .png)
   const items = {
-    A: generateImages('A', 10, '.jpg'), // A kategória .jpg
-    B: generateImages('B', 10, '.png'), // B kategória .png
-    C: generateImages('C', 10, '.png'), // C kategória .png
-    D: generateImages('D', 10, '.png')  // D kategória .png
+    A: generateImages('A', 10, '.jpg'),
+    B: generateImages('B', 10, '.png'),
+    C: generateImages('C', 10, '.jpg'), 
+    D: generateImages('D', 10, '.png')
   };
 
   const names = {
@@ -275,7 +272,7 @@
   const errorMarkEl = document.getElementById('error-mark');
   const footerHintsEl = document.getElementById('footer-hints');
 
-  // Képhiba kezelése: Ha egy kép nem töltődik be (pl. hiányzik), automatikusan ugrik a következőre
+  // Képhiba kezelése: Ha hiányzik egy kép a GitHubról, automatikusan továbblép
   stimulusImgEl.onerror = function() {
     console.warn("Kép nem található, ugrás a következőre:", stimulusImgEl.src);
     currentTrialIndex++;
