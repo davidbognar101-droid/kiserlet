@@ -172,26 +172,26 @@
 </div>
 
 <script>
-  // Beállítások a GitHub betöltéshez:
   const IMAGE_FOLDER = './'; 
-  const IMAGE_EXTENSION = '.png'; // Átállítva .png kiterjesztésre
 
-  function generateImages(prefix, count) {
+  // Dinamikus képnév generáló, ami elfogad egyedi kiterjesztést is
+  function generateImages(prefix, count, extension) {
     const list = [];
     for (let i = 1; i <= count; i++) {
       let filename = (prefix === 'A') 
-        ? `${IMAGE_FOLDER}A_${i}${IMAGE_EXTENSION}` 
-        : `${IMAGE_FOLDER}${prefix}${i}${IMAGE_EXTENSION}`;
+        ? `${IMAGE_FOLDER}A_${i}${extension}` 
+        : `${IMAGE_FOLDER}${prefix}${i}${extension}`;
       list.push(filename);
     }
     return list;
   }
 
+  // Megadjuk, hogy melyik kategóriához milyen kiterjesztés tartozik
   const items = {
-    A: generateImages('A', 10),
-    B: generateImages('B', 10),
-    C: generateImages('C', 10),
-    D: generateImages('D', 10)
+    A: generateImages('A', 10, '.jpg'), // A kategória .jpg
+    B: generateImages('B', 10, '.png'), // B kategória .png
+    C: generateImages('C', 10, '.png'), // C kategória .png
+    D: generateImages('D', 10, '.png')  // D kategória .png
   };
 
   const names = {
@@ -274,6 +274,13 @@
   const stimulusImgEl = document.getElementById('stimulus-img');
   const errorMarkEl = document.getElementById('error-mark');
   const footerHintsEl = document.getElementById('footer-hints');
+
+  // Képhiba kezelése: Ha egy kép nem töltődik be (pl. hiányzik), automatikusan ugrik a következőre
+  stimulusImgEl.onerror = function() {
+    console.warn("Kép nem található, ugrás a következőre:", stimulusImgEl.src);
+    currentTrialIndex++;
+    nextTrial();
+  };
 
   function showBlockInstructions() {
     waitingForSpace = true;
