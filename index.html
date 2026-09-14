@@ -174,7 +174,7 @@
 <script>
   const IMAGE_FOLDER = './'; 
 
-  // PONTOSAN a GitHub tárhelyeden létező fájlok listája
+  // PONTOSAN a GitHub képernyőképeken látható összes fájlnév
   const items = {
     A: [
       `${IMAGE_FOLDER}A_1.jpg`,
@@ -182,35 +182,51 @@
       `${IMAGE_FOLDER}A_3.jpg`,
       `${IMAGE_FOLDER}A_4.jpg`,
       `${IMAGE_FOLDER}A_6.jpg`,
-      `${IMAGE_FOLDER}A_8.jpg`
+      `${IMAGE_FOLDER}A_8.jpg`,
+      `${IMAGE_FOLDER}A_8 (1).jpg`,
+      `${IMAGE_FOLDER}A_9.png`,
+      `${IMAGE_FOLDER}A_10.png`
     ],
     B: [
       `${IMAGE_FOLDER}B_1.png`,
       `${IMAGE_FOLDER}B_2.png`,
       `${IMAGE_FOLDER}B_3.png`,
       `${IMAGE_FOLDER}B_4.png`,
-      `${IMAGE_FOLDER}B_5.png`
+      `${IMAGE_FOLDER}B_5.png`,
+      `${IMAGE_FOLDER}B_7.jpg`,
+      `${IMAGE_FOLDER}B_8.jpg`,
+      `${IMAGE_FOLDER}B_9.jpg`
     ],
     C: [
       `${IMAGE_FOLDER}C_1.jpg`,
       `${IMAGE_FOLDER}C_2.jpg`,
       `${IMAGE_FOLDER}C_3.jpg`,
-      `${IMAGE_FOLDER}C_4.jpg`
+      `${IMAGE_FOLDER}C_4.jpg`,
+      `${IMAGE_FOLDER}C_5.jpg`,
+      `${IMAGE_FOLDER}C_6.png`,
+      `${IMAGE_FOLDER}C_7.jpg`,
+      `${IMAGE_FOLDER}C_8.jpg`,
+      `${IMAGE_FOLDER}C_10.jpg`
     ],
     D: [
       `${IMAGE_FOLDER}D_1.jpg`,
       `${IMAGE_FOLDER}D_2.png`,
       `${IMAGE_FOLDER}D_3.png`,
       `${IMAGE_FOLDER}D_4.jpg`,
-      `${IMAGE_FOLDER}D_5.png`
+      `${IMAGE_FOLDER}D_5.png`,
+      `${IMAGE_FOLDER}D_6.png`,
+      `${IMAGE_FOLDER}D_7.png`,
+      `${IMAGE_FOLDER}D_8.jpg`,
+      `${IMAGE_FOLDER}D_9.webp`,
+      `${IMAGE_FOLDER}D_10.jpg`
     ]
   };
 
   const names = {
-    A: "A kategória",
-    B: "B kategória",
-    C: "C kategória",
-    D: "D kategória"
+    A: "Virágok",
+    B: "Rovarok",
+    C: "Fehér emberek",
+    D: "Romák"
   };
 
   const blocks = [
@@ -455,13 +471,13 @@
 
     let interpretation = "";
     const dVal = parseFloat(stats.dScore);
-    if (dVal > 0.65) interpretation = "Erős implicit társítási preferencia (A kategória + C kategória).";
-    else if (dVal > 0.35) interpretation = "Közepes implicit társítási preferencia (A kategória + C kategória).";
-    else if (dVal > 0.15) interpretation = "Enyhe implicit társítási preferencia (A kategória + C kategória).";
+    if (dVal > 0.65) interpretation = `Erős implicit társítási preferencia (${names.A} + ${names.C}).`;
+    else if (dVal > 0.35) interpretation = `Közepes implicit társítási preferencia (${names.A} + ${names.C}).`;
+    else if (dVal > 0.15) interpretation = `Enyhe implicit társítási preferencia (${names.A} + ${names.C}).`;
     else if (dVal > -0.15) interpretation = "Nincs kimutatható különbség a társítások között.";
-    else if (dVal > -0.35) interpretation = "Enyhe implicit társítási preferencia (B kategória + C kategória).";
-    else if (dVal > -0.65) interpretation = "Közepes implicit társítási preferencia (B kategória + C kategória).";
-    else interpretation = "Erős implicit társítási preferencia (B kategória + C kategória).";
+    else if (dVal > -0.35) interpretation = `Enyhe implicit társítási preferencia (${names.B} + ${names.C}).`;
+    else if (dVal > -0.65) interpretation = `Közepes implicit társítási preferencia (${names.B} + ${names.C}).`;
+    else interpretation = `Erős implicit társítási preferencia (${names.B} + ${names.C}).`;
 
     let tableRows = stats.blockStats.map(s => {
       const isCritical = (s.index === 3 || s.index === 5);
