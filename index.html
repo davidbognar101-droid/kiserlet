@@ -174,21 +174,36 @@
 <script>
   const IMAGE_FOLDER = './'; 
 
-  // Egységesített képnév-generáló: mindig kiteszi az alulvonást (pl. A_1.jpg, C_1.jpg)
-  function generateImages(prefix, count, extension) {
-    const list = [];
-    for (let i = 1; i <= count; i++) {
-      list.push(`${IMAGE_FOLDER}${prefix}_${i}${extension}`);
-    }
-    return list;
-  }
-
-  // Kategóriánként megadott kiterjesztések (A és C: .jpg, B és D: .png)
+  // PONTOSAN a GitHub tárhelyeden létező fájlok listája
   const items = {
-    A: generateImages('A', 10, '.jpg'),
-    B: generateImages('B', 10, '.png'),
-    C: generateImages('C', 10, '.jpg'), 
-    D: generateImages('D', 10, '.png')
+    A: [
+      `${IMAGE_FOLDER}A_1.jpg`,
+      `${IMAGE_FOLDER}A_2.jpg`,
+      `${IMAGE_FOLDER}A_3.jpg`,
+      `${IMAGE_FOLDER}A_4.jpg`,
+      `${IMAGE_FOLDER}A_6.jpg`,
+      `${IMAGE_FOLDER}A_8.jpg`
+    ],
+    B: [
+      `${IMAGE_FOLDER}B_1.png`,
+      `${IMAGE_FOLDER}B_2.png`,
+      `${IMAGE_FOLDER}B_3.png`,
+      `${IMAGE_FOLDER}B_4.png`,
+      `${IMAGE_FOLDER}B_5.png`
+    ],
+    C: [
+      `${IMAGE_FOLDER}C_1.jpg`,
+      `${IMAGE_FOLDER}C_2.jpg`,
+      `${IMAGE_FOLDER}C_3.jpg`,
+      `${IMAGE_FOLDER}C_4.jpg`
+    ],
+    D: [
+      `${IMAGE_FOLDER}D_1.jpg`,
+      `${IMAGE_FOLDER}D_2.png`,
+      `${IMAGE_FOLDER}D_3.png`,
+      `${IMAGE_FOLDER}D_4.jpg`,
+      `${IMAGE_FOLDER}D_5.png`
+    ]
   };
 
   const names = {
@@ -271,13 +286,6 @@
   const stimulusImgEl = document.getElementById('stimulus-img');
   const errorMarkEl = document.getElementById('error-mark');
   const footerHintsEl = document.getElementById('footer-hints');
-
-  // Képhiba kezelése: Ha hiányzik egy kép a GitHubról, automatikusan továbblép
-  stimulusImgEl.onerror = function() {
-    console.warn("Kép nem található, ugrás a következőre:", stimulusImgEl.src);
-    currentTrialIndex++;
-    nextTrial();
-  };
 
   function showBlockInstructions() {
     waitingForSpace = true;
